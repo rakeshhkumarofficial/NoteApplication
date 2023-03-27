@@ -13,6 +13,5 @@
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; } = false;
-        public ICollection<Note> Notes { get; set; }
     }
 }

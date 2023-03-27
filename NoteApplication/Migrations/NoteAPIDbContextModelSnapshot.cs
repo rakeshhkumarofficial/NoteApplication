@@ -91,12 +91,7 @@ namespace NoteApplication.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("NoteId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Notes");
                 });
@@ -169,18 +164,6 @@ namespace NoteApplication.Migrations
                         .HasForeignKey("NoteId");
 
                     b.Navigation("Note");
-                });
-
-            modelBuilder.Entity("NoteApplication.Models.Note", b =>
-                {
-                    b.HasOne("NoteApplication.Models.User", null)
-                        .WithMany("Notes")
-                        .HasForeignKey("UserId");
-                });
-
-            modelBuilder.Entity("NoteApplication.Models.User", b =>
-                {
-                    b.Navigation("Notes");
                 });
 #pragma warning restore 612, 618
         }

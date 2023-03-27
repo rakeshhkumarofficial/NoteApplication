@@ -12,7 +12,7 @@ using NoteApplication.Data;
 namespace NoteApplication.Migrations
 {
     [DbContext(typeof(NoteAPIDbContext))]
-    [Migration("20230327065436_New")]
+    [Migration("20230327090838_New")]
     partial class New
     {
         /// <inheritdoc />
@@ -94,12 +94,7 @@ namespace NoteApplication.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("NoteId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Notes");
                 });
@@ -172,18 +167,6 @@ namespace NoteApplication.Migrations
                         .HasForeignKey("NoteId");
 
                     b.Navigation("Note");
-                });
-
-            modelBuilder.Entity("NoteApplication.Models.Note", b =>
-                {
-                    b.HasOne("NoteApplication.Models.User", null)
-                        .WithMany("Notes")
-                        .HasForeignKey("UserId");
-                });
-
-            modelBuilder.Entity("NoteApplication.Models.User", b =>
-                {
-                    b.Navigation("Notes");
                 });
 #pragma warning restore 612, 618
         }

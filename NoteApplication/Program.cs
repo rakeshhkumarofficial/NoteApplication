@@ -61,6 +61,7 @@ builder.Services.AddCors(options => options.AddPolicy(name: "CorsPolicy",
 ));
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 
 builder.Services.AddSignalR();
@@ -83,9 +84,10 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/wwwroot"
 });
 
-app.UseAuthorization();
+app.UseAuthentication();
 app.UseRouting();
 app.MapHub<NoteHub>("/NoteHub");
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

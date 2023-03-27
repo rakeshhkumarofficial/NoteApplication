@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using NoteApplication.Data;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Security.Claims;
+using NoteApplication.Models;
 
 namespace NoteApplication.Hubs
 {
@@ -12,6 +13,7 @@ namespace NoteApplication.Hubs
     public class NoteHub : Hub
     {
         private readonly NoteAPIDbContext _dbContext;
+        Response response = new Response();
         private static Dictionary<string, string> Connections = new Dictionary<string, string>();
         public NoteHub(NoteAPIDbContext dbContext)
         {
@@ -30,6 +32,40 @@ namespace NoteApplication.Hubs
             Connections.Add(email, Context.ConnectionId);
             Clients.All.SendAsync("Refresh");
             return base.OnConnectedAsync();
+        }
+        public async Task AddNote(AddNoteRequest request)
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = new Note()
+            {
+                NoteId = Guid.NewGuid(),
+                CreatorEmail = email,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Title = request.Title,  
+                Text = null,
+                Images = null
+             };
+            if(request.ContentType == 1)
+            {
+                note.Text = request.Content;
+            }
+
+            if(request.ContentType == 2) { 
+               note.Images = request.Content;         
+            };
+
+            _dbContext.Notes.Add(note);
+            _dbContext.SaveChanges();
+
+            response.Data = note;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "Note Added";
+            await Clients.Caller.SendAsync("Others", response);
+           
         }
         public override Task OnDisconnectedAsync(Exception? exception)
         {
