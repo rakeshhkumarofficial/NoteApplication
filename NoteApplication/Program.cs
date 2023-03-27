@@ -65,6 +65,7 @@ builder.Services.AddScoped<IFileService, FileService>();
 
 
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<AlarmService>();
 
 var app = builder.Build();
 

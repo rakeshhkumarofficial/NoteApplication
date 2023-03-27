@@ -6,6 +6,11 @@ using NoteApplication.Data;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Security.Claims;
 using NoteApplication.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using NoteApplication.Services;
+using Microsoft.AspNetCore.Http;
+using System.Globalization;
+using System.Threading.Tasks;
 
 namespace NoteApplication.Hubs
 {
@@ -64,13 +69,16 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Message = "Note Added";
             await Clients.Caller.SendAsync("Others", response);
+            
             return response;
         }
 
 
-        public async Task<Response> AddReminder(string Id, DateTime Time)
+        public async Task<Response> AddReminder(string Id, string Time)
         {
             Guid NoteId = new Guid(Id);
+            DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
@@ -86,7 +94,7 @@ namespace NoteApplication.Hubs
                 return response;
             }
 
-            if (Time < DateTime.Now)
+            if (dateTime < DateTime.Now)
             {
                 response.StatusCode = 400;
                 response.IsSuccess = false;
@@ -101,7 +109,7 @@ namespace NoteApplication.Hubs
                 RemId = Guid.NewGuid(),
                 NoteId = NoteId,
                 Email = email,
-                RemindAt = Time
+                RemindAt = dateTime
             };
             _dbContext.Reminders.Add(reminder);
             _dbContext.SaveChanges();
@@ -109,8 +117,22 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Data = reminder;
             response.Message = "Reminder Added";
+            AlarmStorage.AlarmTime = dateTime;
             await Clients.Caller.SendAsync("NoteReminder", response);
             return response;
+        }
+
+        public async Task CancelReminder(string Id)
+        {
+            Guid RemId = new Guid(Id);
+            var reminder = _dbContext.Reminders.Where(x => x.RemId == RemId).FirstOrDefault();
+            if (reminder == null)
+            {
+                await Clients.Caller.SendAsync("RemoveReminder", "Not Exist");
+            }
+            _dbContext.Reminders.Remove(reminder);
+            _dbContext.SaveChanges();
+            await Clients.Caller.SendAsync("RemoveReminder", "removed");
         }
 
 
