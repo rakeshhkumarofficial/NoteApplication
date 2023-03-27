@@ -33,7 +33,7 @@ namespace NoteApplication.Hubs
             Clients.All.SendAsync("Refresh");
             return base.OnConnectedAsync();
         }
-        public async Task AddNote(AddNoteRequest request)
+        public async Task<Response> AddNote(AddNoteRequest request)
         {
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
@@ -44,19 +44,18 @@ namespace NoteApplication.Hubs
                 CreatorEmail = email,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
-                Title = request.Title,  
+                Title = request.Title,
                 Text = null,
                 Images = null
-             };
-            if(request.ContentType == 1)
+            };
+            if (request.ContentType == 1)
             {
                 note.Text = request.Content;
             }
 
-            if(request.ContentType == 2) { 
-               note.Images = request.Content;         
-            };
-
+            if (request.ContentType == 2) {
+                note.Images = request.Content;
+            }
             _dbContext.Notes.Add(note);
             _dbContext.SaveChanges();
 
@@ -65,8 +64,56 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Message = "Note Added";
             await Clients.Caller.SendAsync("Others", response);
-           
+            return response;
         }
+
+
+        public async Task<Response> AddReminder(string Id, DateTime Time)
+        {
+            Guid NoteId = new Guid(Id);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+
+            bool noteExist = _dbContext.Notes.Where(x => x.NoteId == NoteId).Any();
+            if (!noteExist)
+            {
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                response.Message = "Note Not exist";
+                response.Data = null;
+                await Clients.Caller.SendAsync("NoteReminder", response);
+                return response;
+            }
+
+            if (Time < DateTime.Now)
+            {
+                response.StatusCode = 400;
+                response.IsSuccess = false;
+                response.Message = "Wrong Time";
+                response.Data = null;
+                await Clients.Caller.SendAsync("NoteReminder", response);
+                return response;
+            }
+
+            var reminder = new Reminder()
+            {
+                RemId = Guid.NewGuid(),
+                NoteId = NoteId,
+                Email = email,
+                RemindAt = Time
+            };
+            _dbContext.Reminders.Add(reminder);
+            _dbContext.SaveChanges();
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Data = reminder;
+            response.Message = "Reminder Added";
+            await Clients.Caller.SendAsync("NoteReminder", response);
+            return response;
+        }
+
+
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();
