@@ -249,5 +249,36 @@ namespace NoteApplication.Services
             response.Message = "User details updated";
             return response;
         }
+        public Response FileUpload(FileUploadRequest upload, string email)
+        {
+            var obj = _dbContext.Users.FirstOrDefault(x => x.Email == email);
+            int len = obj == null ? 0 : 1;
+            if (len == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 404;
+                response.IsSuccess = false;
+                response.Message = "User Not Found";
+                return response;
+            }
+            var fileName = Path.GetFileNameWithoutExtension(upload.File.FileName);
+            var fileExt = Path.GetExtension(upload.File.FileName);
+            var uniqueFileName = $"{fileName}_{DateTime.UtcNow.ToString("yyyyMMddHHmmssfff")}{fileExt}";
+            string FilePath = Path.Combine("wwwroot", "Images", uniqueFileName);
+            
+            string path = Path.Combine(Directory.GetCurrentDirectory(), FilePath);
+           
+            obj.ProfileImage = FilePath;
+            
+            var filestream = System.IO.File.Create(path);
+            upload.File.CopyTo(filestream);
+            filestream.Close();
+            _dbContext.SaveChanges();
+            response.Data = FilePath;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "File Uploaded Successfully..";
+            return response;
+        }
     }
 }

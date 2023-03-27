@@ -3,10 +3,9 @@
     public class Collaborator
     {
         public Guid Id { get; set; }
-        public Guid NoteId { get; set; }
+        public string? SenderEmail { get; set; }
+        public string? ReciverEmail { get; set; }
         public Note? Note { get; set; }
-        public Guid UserId { get; set; }
-        public User? User { get; set; }
-
+        public DateTime Time { get; set; }  
     }
 }

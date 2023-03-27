@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NoteApplication.Data;
+using NoteApplication.Hubs;
 using NoteApplication.Services;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
@@ -61,6 +62,7 @@ builder.Services.AddCors(options => options.AddPolicy(name: "CorsPolicy",
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 
+
 builder.Services.AddSignalR();
 
 var app = builder.Build();
@@ -74,8 +76,16 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+              Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
+    RequestPath = "/wwwroot"
+});
 
 app.UseAuthorization();
+app.UseRouting();
+app.MapHub<NoteHub>("/NoteHub");
 app.MapControllers();
 
 app.Run();

@@ -1,10 +1,13 @@
-﻿namespace NoteApplication.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace NoteApplication.Models
 {
     public class Reminder
     {
+        [Key]
         public Guid RemId { get; set; }
-        public int NoteId { get; set; }
-        public Note? Note { get; set; }
+        public Guid NoteId { get; set; }
         public DateTime RemindAt { get; set; }
+        public string? Email { get; set; }
     }
 }

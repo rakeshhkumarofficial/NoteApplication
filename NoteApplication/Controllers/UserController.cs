@@ -46,6 +46,16 @@ namespace NoteApplication.Controllers
         }
 
         [HttpPut, Authorize(Roles = "Login")]
+        public IActionResult ImageUpload([FromForm] FileUploadRequest upload)
+        {
+            _logger.LogInformation("\nExecuting method {MethodName}\n", nameof(ImageUpload));
+            var user = HttpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var res = _userService.FileUpload(upload, email);
+            return Ok(res);
+        }
+
+        [HttpPut, Authorize(Roles = "Login")]
         public IActionResult ChangePassword(ChangePasswordRequest changePasswordRequest)
         {
             _logger.LogInformation("\nExecuting method {MethodName}\n", nameof(ChangePassword));
