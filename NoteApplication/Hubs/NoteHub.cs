@@ -76,12 +76,12 @@ namespace NoteApplication.Hubs
             
             return response;
         }
-
-        public async Task<Response> AddReminder(string Id, string Time)
+        public async Task<Response> AddReminder(string Id, DateTime Time)
         {
 
             Guid NoteId = new Guid(Id);
-            DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+           // DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.Parse(Time.ToString("yyyy-MM-dd HH:mm"));
 
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
@@ -127,12 +127,24 @@ namespace NoteApplication.Hubs
             return response;
         }
 
+        public async Task<Response> GetNotes()
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email).ToList();
+            response.Data = notes;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "All Notes";
+            await Clients.Caller.SendAsync("RecieveNotes", response);
+            return response;
+        }
         public async Task CancelReminder(string alarmId)
         {
             AlarmStorage.AlarmTimes.Remove(alarmId);
             await Clients.Caller.SendAsync("alarmCancelled");
         }
-
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
