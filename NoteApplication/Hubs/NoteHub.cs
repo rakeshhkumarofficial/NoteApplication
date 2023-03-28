@@ -126,7 +126,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
         }
-
         public async Task<Response> GetNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -145,7 +144,6 @@ namespace NoteApplication.Hubs
             AlarmStorage.AlarmTimes.Remove(alarmId);
             await Clients.Caller.SendAsync("alarmCancelled");
         }
-
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();
