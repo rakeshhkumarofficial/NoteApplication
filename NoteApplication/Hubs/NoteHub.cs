@@ -77,7 +77,6 @@ namespace NoteApplication.Hubs
             return response;
         }
 
-
         public async Task<Response> AddReminder(string Id, string Time)
         {
 
@@ -122,23 +121,16 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Data = reminder;
             response.Message = "Reminder Added";
-            AlarmStorage.AlarmTime = dateTime;
-            await Clients.Caller.SendAsync("NoteReminder", response);
-           
+            //AlarmStorage.AlarmTime = dateTime;
+            AlarmStorage.AlarmTimes[Id] = dateTime;
+            await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
         }
 
-        public async Task CancelReminder(string Id)
+        public async Task CancelReminder(string alarmId)
         {
-            Guid RemId = new Guid(Id);
-            var reminder = _dbContext.Reminders.Where(x => x.RemId == RemId).FirstOrDefault();
-            if (reminder == null)
-            {
-                await Clients.Caller.SendAsync("RemoveReminder", "Not Exist");
-            }
-            _dbContext.Reminders.Remove(reminder);
-            _dbContext.SaveChanges();
-            await Clients.Caller.SendAsync("RemoveReminder", "removed");
+            AlarmStorage.AlarmTimes.Remove(alarmId);
+            await Clients.Caller.SendAsync("alarmCancelled");
         }
 
 
