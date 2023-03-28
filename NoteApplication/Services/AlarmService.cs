@@ -25,9 +25,9 @@ namespace NoteApplication.Services
                 {
 
                     await _hubContext.Clients.All.SendAsync("alarmTriggered");
-                   
+
                     AlarmStorage.AlarmTime = null;
-                    
+
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);

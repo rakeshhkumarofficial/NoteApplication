@@ -11,6 +11,7 @@ using NoteApplication.Services;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
 using System.Threading.Tasks;
+using System;
 
 namespace NoteApplication.Hubs
 {
@@ -22,7 +23,7 @@ namespace NoteApplication.Hubs
         private static Dictionary<string, string> Connections = new Dictionary<string, string>();
         public NoteHub(NoteAPIDbContext dbContext)
         {
-            _dbContext = dbContext;
+            _dbContext = dbContext;         
         }
         public override Task OnConnectedAsync()
         {
@@ -51,15 +52,18 @@ namespace NoteApplication.Hubs
                 UpdatedAt = DateTime.Now,
                 Title = request.Title,
                 Text = null,
-                Images = null
+                Images = null,
+                MessageType = null,
             };
-            if (request.ContentType == 1)
+            if (request.MessageType == 1)
             {
-                note.Text = request.Content;
+                note.Text = request.Message;
+                note.MessageType = 1;
             }
 
-            if (request.ContentType == 2) {
-                note.Images = request.Content;
+            if (request.MessageType == 2) {
+                note.Images = request.Message;
+                note.MessageType = 2;
             }
             _dbContext.Notes.Add(note);
             _dbContext.SaveChanges();
@@ -76,6 +80,7 @@ namespace NoteApplication.Hubs
 
         public async Task<Response> AddReminder(string Id, string Time)
         {
+
             Guid NoteId = new Guid(Id);
             DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -119,6 +124,7 @@ namespace NoteApplication.Hubs
             response.Message = "Reminder Added";
             AlarmStorage.AlarmTime = dateTime;
             await Clients.Caller.SendAsync("NoteReminder", response);
+           
             return response;
         }
 

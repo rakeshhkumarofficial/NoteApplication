@@ -12,8 +12,8 @@ using NoteApplication.Data;
 namespace NoteApplication.Migrations
 {
     [DbContext(typeof(NoteAPIDbContext))]
-    [Migration("20230327090838_New")]
-    partial class New
+    [Migration("20230328071951_Test")]
+    partial class Test
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -84,6 +84,9 @@ namespace NoteApplication.Migrations
 
                     b.Property<string>("Images")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MessageType")
+                        .HasColumnType("int");
 
                     b.Property<string>("Text")
                         .HasColumnType("nvarchar(max)");

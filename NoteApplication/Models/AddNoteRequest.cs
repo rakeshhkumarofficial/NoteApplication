@@ -3,7 +3,7 @@
     public class AddNoteRequest
     {
         public string? Title { get; set; }
-        public string? Content { get; set; }  
-        public int ContentType { get; set; }
+        public string? Message { get; set; }  
+        public int MessageType { get; set; }
     }
 }
