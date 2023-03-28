@@ -81,7 +81,7 @@ namespace NoteApplication.Hubs
         {
 
             Guid NoteId = new Guid(Id);
-            DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            DateTime dateTime = DateTime.ParseExact(Time, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
 
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
