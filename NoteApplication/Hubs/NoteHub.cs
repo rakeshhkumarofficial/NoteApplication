@@ -56,7 +56,12 @@ namespace NoteApplication.Hubs
                 MessageType = null,
                 IsArchived = false,
                 IsTrashed = false,
+                Pin = 0 ,
             };
+            if(request.Pin == 1)
+            {
+                note.Pin = request.Pin;
+            }
             if (request.MessageType == 1)
             {
                 note.Text = request.Message;
@@ -64,7 +69,7 @@ namespace NoteApplication.Hubs
             }
 
             if (request.MessageType == 2) {
-                note.Images = request.Message;
+                note.Images = request.URL;
                 note.MessageType = 2;
             }
             _dbContext.Notes.Add(note);
@@ -99,6 +104,17 @@ namespace NoteApplication.Hubs
                 await Clients.Caller.SendAsync("NoteReminder", response);
                 return response;
             }
+            var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false && x.NoteId == NoteId).ToList();
+            if (notes.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = false;
+                response.Message = "You don't have the permission to add Reminder.";
+                await Clients.Caller.SendAsync("NoteReminder", response);
+                return response;
+
+            }
 
             if (dateTime < DateTime.Now)
             {
@@ -124,19 +140,21 @@ namespace NoteApplication.Hubs
             response.Data = reminder;
             response.Message = "Reminder Added";
             var note = _dbContext.Notes.Where(x=>x.NoteId == NoteId).FirstOrDefault();
+            
+        
+        
             //AlarmStorage.AlarmTimes.Add(dateTime, Context.ConnectionId);
-            AlarmStorage.AlarmTimes.Add(dateTime, new List<string> { Context.ConnectionId , note.ToString()});
+            AlarmStorage.AlarmTimes.Add(dateTime, new List<string> { Context.ConnectionId,note.CreatorEmail,note.NoteId.ToString(),note.Title, note.Text, note.Images });
 
             await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
-        }
-        
+        }       
         public async Task<Response> GetNotes()
         {
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
-            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false).ToList();
+            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false && x.Pin == 0 ).ToList();
             if (notes.Count == 0)
             {
                 response.Data = null;
@@ -151,6 +169,29 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Message = "All Notes";
             await Clients.Caller.SendAsync("RecieveNotes",response);
+            return response;
+        }
+
+        public async Task<Response> GetPinnedNotes()
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false && x.Pin==1).OrderByDescending(x=>x.UpdatedAt).ToList();
+            if (notes.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "No Notes Available";
+                await Clients.Caller.SendAsync("RecieveNotes", response);
+                return response;
+            }
+            response.Data = notes;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "All Notes";
+            await Clients.Caller.SendAsync("RecieveNotes", response);
             return response;
         }
 
@@ -210,6 +251,7 @@ namespace NoteApplication.Hubs
             bool creator = note.CreatorEmail == email;
             if (creator)
             {
+                note.UpdatedAt = DateTime.Now;
                 note.IsArchived = true;
                 _dbContext.SaveChanges();
                 response.Data = note;
@@ -236,6 +278,7 @@ namespace NoteApplication.Hubs
             bool creator = note.CreatorEmail == email ;
             if (creator)
             {
+                note.UpdatedAt = DateTime.Now;
                 note.IsArchived = false;
                 note.IsTrashed = true;
                 _dbContext.SaveChanges();
@@ -254,6 +297,37 @@ namespace NoteApplication.Hubs
             return response;
 
         }
+
+        public async Task<Response> PinNotes(string Id , int Pin)
+        {
+            Guid NoteId = new Guid(Id);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = _dbContext.Notes.Find(NoteId);
+            bool creator = note.CreatorEmail == email;
+            if (creator)
+            {
+                note.Pin = Pin;
+                note.UpdatedAt = DateTime.Now;
+                _dbContext.SaveChanges();
+                response.Data = note;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Note is Pinned";
+                await Clients.Caller.SendAsync("RecievedPinnedNotes", response);
+                return response;
+            }
+            response.Data = null;
+            response.StatusCode = 200;
+            response.IsSuccess = false;
+            response.Message = "You don't have the permission to Pin";
+            await Clients.Caller.SendAsync("RecievedPinnedNotes", response);
+            return response;
+        }
+
+        
+
        /* public async Task CancelReminder(string alarmId)
         {
             AlarmStorage.AlarmTimes.Remove(alarmId);

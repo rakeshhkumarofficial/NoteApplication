@@ -12,5 +12,6 @@
        public DateTime UpdatedAt { get; set; }
        public bool IsArchived { get; set; }
        public bool IsTrashed { get; set; }
+       public int Pin { get; set; }
     }
 }
