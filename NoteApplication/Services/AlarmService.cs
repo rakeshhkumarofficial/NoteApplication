@@ -22,9 +22,9 @@ namespace NoteApplication.Services
             {
                 foreach (var alarm in AlarmStorage.AlarmTimes)
                 {
-                    if (alarm.Value <= DateTime.Now)
+                    if (alarm.Key <= DateTime.Now)
                     {
-                        await _hubContext.Clients.All.SendAsync("alarmTriggered", alarm.Key);
+                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm.Key);
                         AlarmStorage.AlarmTimes.Remove(alarm.Key);
                     }
                 }
@@ -34,7 +34,9 @@ namespace NoteApplication.Services
     }
     public static class AlarmStorage
     {
-        public static Dictionary<string, DateTime> AlarmTimes { get; } = new Dictionary<string, DateTime>();
+        // public static Dictionary<DateTime, string> AlarmTimes { get; set; } = new Dictionary<DateTime, string>();
+        public static Dictionary<DateTime, List<string>> AlarmTimes { get; set; } = new Dictionary<DateTime, List<string>>();
+
     }
 
 }

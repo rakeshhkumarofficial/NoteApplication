@@ -123,11 +123,14 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Data = reminder;
             response.Message = "Reminder Added";
-            //AlarmStorage.AlarmTime = dateTime;
-            AlarmStorage.AlarmTimes[Id] = dateTime;
+            var note = _dbContext.Notes.Where(x=>x.NoteId == NoteId).FirstOrDefault();
+            //AlarmStorage.AlarmTimes.Add(dateTime, Context.ConnectionId);
+            AlarmStorage.AlarmTimes.Add(dateTime, new List<string> { Context.ConnectionId , note.ToString()});
+
             await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
         }
+        
         public async Task<Response> GetNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -251,11 +254,11 @@ namespace NoteApplication.Hubs
             return response;
 
         }
-        public async Task CancelReminder(string alarmId)
+       /* public async Task CancelReminder(string alarmId)
         {
             AlarmStorage.AlarmTimes.Remove(alarmId);
             await Clients.Caller.SendAsync("alarmCancelled");
-        }
+        }  */ 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();
