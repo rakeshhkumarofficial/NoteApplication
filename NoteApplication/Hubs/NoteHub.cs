@@ -139,6 +139,32 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveNotes", response);
             return response;
         }
+        public async Task<Response> DeleteNote(string NoteId)
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = _dbContext.Notes.Find(NoteId);
+            bool creator = note.CreatorEmail == email;
+            if (creator)
+            {
+                _dbContext.Notes.Remove(note);
+                _dbContext.SaveChanges();
+                response.Data = note;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Note deleted";
+                await Clients.Caller.SendAsync("RecievedTrash", response);
+                return response;
+            }
+            response.Data = null;
+            response.StatusCode = 200;
+            response.IsSuccess = false;
+            response.Message = "You don't have the permission to delete.";
+            await Clients.Caller.SendAsync("RecievedTrash", response);
+            return response;
+
+        }
         public async Task CancelReminder(string alarmId)
         {
             AlarmStorage.AlarmTimes.Remove(alarmId);
