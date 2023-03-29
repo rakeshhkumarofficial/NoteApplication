@@ -24,7 +24,7 @@ namespace NoteApplication.Services
                 {
                     if (alarm.Key <= DateTime.Now)
                     {
-                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm.Key);
+                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm);
                         AlarmStorage.AlarmTimes.Remove(alarm.Key);
                     }
                 }
