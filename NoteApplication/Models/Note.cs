@@ -10,5 +10,7 @@
        public string? CreatorEmail { get; set; }
        public DateTime CreatedAt { get; set; }
        public DateTime UpdatedAt { get; set; }
+       public bool IsArchived { get; set; }
+       public bool IsTrashed { get; set; }
     }
 }

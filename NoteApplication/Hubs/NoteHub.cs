@@ -54,6 +54,8 @@ namespace NoteApplication.Hubs
                 Text = null,
                 Images = null,
                 MessageType = null,
+                IsArchived = false,
+                IsTrashed = false,
             };
             if (request.MessageType == 1)
             {
@@ -131,16 +133,46 @@ namespace NoteApplication.Hubs
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
-            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email).ToList();
+            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false).ToList();
             response.Data = notes;
             response.StatusCode = 200;
             response.IsSuccess = true;
             response.Message = "All Notes";
-            await Clients.Caller.SendAsync("RecieveNotes", response);
+            await Clients.Caller.SendAsync("RecieveNotes",response);
             return response;
         }
-        public async Task<Response> DeleteNote(string NoteId)
+
+        public async Task<Response> GetArchiveNote()
         {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsArchived == true).ToList();
+            response.Data = notes;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "All Notes";
+            await Clients.Caller.SendAsync("RecieveArchiveNotes", response);
+            return response;
+        }
+
+        public async Task<Response> GetTrashNote()
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsTrashed == true).ToList();
+            response.Data = notes;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "All Notes";
+            await Clients.Caller.SendAsync("RecieveTrashNotes", response);
+            return response;
+        }
+
+        public async Task<Response> ArchiveNote(string Id)
+        {
+            Guid NoteId = new Guid(Id);
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
@@ -148,12 +180,39 @@ namespace NoteApplication.Hubs
             bool creator = note.CreatorEmail == email;
             if (creator)
             {
-                _dbContext.Notes.Remove(note);
+                note.IsArchived = true;
                 _dbContext.SaveChanges();
                 response.Data = note;
                 response.StatusCode = 200;
                 response.IsSuccess = true;
-                response.Message = "Note deleted";
+                response.Message = "Note is Archived";
+                await Clients.Caller.SendAsync("RecievedArchive", response);
+                return response;
+            }
+            response.Data = null;
+            response.StatusCode = 200;
+            response.IsSuccess = false;
+            response.Message = "You don't have the permission to delete.";
+            await Clients.Caller.SendAsync("RecievedArchive", response);
+            return response;
+        }
+        public async Task<Response> DeleteNote(string Id)
+        {
+            Guid NoteId = new Guid(Id);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = _dbContext.Notes.Find(NoteId);
+            bool creator = note.CreatorEmail == email ;
+            if (creator)
+            {
+                note.IsArchived = false;
+                note.IsTrashed = true;
+                _dbContext.SaveChanges();
+                response.Data = note;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Note is Trashed";
                 await Clients.Caller.SendAsync("RecievedTrash", response);
                 return response;
             }
