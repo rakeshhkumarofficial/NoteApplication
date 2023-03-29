@@ -134,6 +134,15 @@ namespace NoteApplication.Hubs
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
             var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false).ToList();
+            if (notes.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "No Notes Available";
+                await Clients.Caller.SendAsync("RecieveNotes", response);
+                return response;
+            }
             response.Data = notes;
             response.StatusCode = 200;
             response.IsSuccess = true;
@@ -148,6 +157,15 @@ namespace NoteApplication.Hubs
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
             var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsArchived == true).ToList();
+            if(notes.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Archive is Empty";
+                await Clients.Caller.SendAsync("RecieveArchiveNotes", response);
+                return response;
+            }
             response.Data = notes;
             response.StatusCode = 200;
             response.IsSuccess = true;
@@ -162,6 +180,15 @@ namespace NoteApplication.Hubs
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
             var notes = _dbContext.Notes.Where(x => x.CreatorEmail == email && x.IsTrashed == true).ToList();
+            if (notes.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Trash is Empty";
+                await Clients.Caller.SendAsync("RecieveTrashNotes", response);
+                return response;
+            }
             response.Data = notes;
             response.StatusCode = 200;
             response.IsSuccess = true;
