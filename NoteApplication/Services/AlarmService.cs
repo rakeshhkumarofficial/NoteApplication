@@ -27,8 +27,14 @@ namespace NoteApplication.Services
 
                     if (alarm.Key <= DateTime.Now)
                     {
-                        
-                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm.Value[1]);
+                        Response res = new Response()
+                        {
+                            StatusCode = 200,
+                            Message = " Reminder for Note",
+                            IsSuccess = true,
+                            Data = alarm
+                        };
+                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", res);
                         var email = alarm.Value[1];
                         MailMessage message = new MailMessage();
                         message.From = new MailAddress("rakesh.kumar23@chicmic.co.in");
