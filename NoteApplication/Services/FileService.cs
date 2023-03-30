@@ -12,7 +12,7 @@ namespace NoteApplication.Services
             var fileName = Path.GetFileNameWithoutExtension(upload.File.FileName);
             var fileExt = Path.GetExtension(upload.File.FileName);
             var uniqueFileName = $"{fileName}_{DateTime.UtcNow.ToString("yyyyMMddHHmmssfff")}{fileExt}";
-            string FilePath = Path.Combine("wwwroot", "Images", uniqueFileName);
+            string FilePath = "wwwroot" + "//" + "Images" + "//" + uniqueFileName;
 
             string path = Path.Combine(Directory.GetCurrentDirectory(), FilePath);
 

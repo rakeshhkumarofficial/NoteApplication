@@ -15,6 +15,7 @@ using System;
 using System.IO.Compression;
 using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Text.RegularExpressions;
 
 namespace NoteApplication.Hubs
 {
@@ -326,6 +327,16 @@ namespace NoteApplication.Hubs
         }
         public async Task<Response> ShareNote(string Id , string ReceiverEmail)
         {
+            string regexPatternEmail = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$";
+            if (!Regex.IsMatch(ReceiverEmail, regexPatternEmail))
+            {
+                response.StatusCode = 400;
+                response.IsSuccess = false;
+                response.Message = "Enter Valid email";
+                response.Data = null;
+                await Clients.Caller.SendAsync("ReceiveNote", response);
+                return response;
+            }
             Guid NoteId = new Guid(Id);
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
@@ -344,8 +355,8 @@ namespace NoteApplication.Hubs
             response.IsSuccess = true;
             response.Message = "Note Shared Successfully";
             response.Data = collab;
-            var connId = Connections.Where(x => x.Key == ReceiverEmail).Select(x => x.Value);
             await Clients.Caller.SendAsync("ReceiveNote", response);
+            var connId = Connections.Where(x => x.Key == ReceiverEmail).Select(x => x.Value);
             response.Message = "Note is Received";
             await Clients.Clients(connId).SendAsync("ReceiveNote", response);
             return response;
