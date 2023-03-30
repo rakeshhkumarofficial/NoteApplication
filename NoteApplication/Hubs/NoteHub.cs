@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Http;
 using System.Globalization;
 using System.Threading.Tasks;
 using System;
+using System.IO.Compression;
+using Azure.Core;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace NoteApplication.Hubs
 {
@@ -141,10 +144,10 @@ namespace NoteApplication.Hubs
             response.Message = "Reminder Added";
             var note = _dbContext.Notes.Where(x=>x.NoteId == NoteId).FirstOrDefault();
             
-        
+
         
             //AlarmStorage.AlarmTimes.Add(dateTime, Context.ConnectionId);
-            AlarmStorage.AlarmTimes.Add(dateTime, new List<string> { Context.ConnectionId,note.CreatorEmail,note.NoteId.ToString(),note.Title, note.Text, note.Images });
+            AlarmStorage.AlarmTimes.Add(dateTime, new List<string> {  Context.ConnectionId, note.CreatorEmail, note.NoteId.ToString(), note.Title, note.Text, note.Images } );
 
             await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
@@ -240,7 +243,7 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveTrashNotes", response);
             return response;
         }
-        public async Task<Response> ArchiveNote(string Id)
+        public async Task<Response> ArchiveNote(string Id , bool IsArchived)
         {
             Guid NoteId = new Guid(Id);
             var httpContext = Context.GetHttpContext();
@@ -251,7 +254,7 @@ namespace NoteApplication.Hubs
             if (creator)
             {
                 note.UpdatedAt = DateTime.Now;
-                note.IsArchived = true;
+                note.IsArchived = IsArchived;
                 _dbContext.SaveChanges();
                 response.Data = note;
                 response.StatusCode = 200;
@@ -267,7 +270,7 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedArchive", response);
             return response;
         }
-        public async Task<Response> DeleteNote(string Id)
+        public async Task<Response> TrashNote(string Id , bool IsTrashed)
         {
             Guid NoteId = new Guid(Id);
             var httpContext = Context.GetHttpContext();
@@ -278,8 +281,7 @@ namespace NoteApplication.Hubs
             if (creator)
             {
                 note.UpdatedAt = DateTime.Now;
-                note.IsArchived = false;
-                note.IsTrashed = true;
+                note.IsTrashed = IsTrashed;
                 _dbContext.SaveChanges();
                 response.Data = note;
                 response.StatusCode = 200;
@@ -294,7 +296,134 @@ namespace NoteApplication.Hubs
             response.Message = "You don't have the permission to delete.";
             await Clients.Caller.SendAsync("RecievedTrash", response);
             return response;
+        }
 
+        public async Task<Response> DeleteNote(string Id)
+        {
+            Guid NoteId = new Guid(Id);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = _dbContext.Notes.Find(NoteId);
+            bool creator = note.CreatorEmail == email;
+            if (creator)
+            {
+                _dbContext.Notes.Remove(note);
+                _dbContext.SaveChanges();
+                response.Data = note;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Note is Deleted";
+                await Clients.Caller.SendAsync("RecievedDeleted", response);
+                return response;
+            }
+            response.Data = null;
+            response.StatusCode = 200;
+            response.IsSuccess = false;
+            response.Message = "You don't have the permission to delete.";
+            await Clients.Caller.SendAsync("RecievedTrash", response);
+            return response;
+        }
+        public async Task<Response> ShareNote(string Id , string ReceiverEmail)
+        {
+            Guid NoteId = new Guid(Id);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var note = _dbContext.Notes.Find(NoteId);
+            var collab = new Collaborator() { 
+                Id = Guid.NewGuid(),
+                SenderEmail = email,
+                ReceiverEmail = ReceiverEmail,
+                NoteId = NoteId,
+                Time = DateTime.Now,
+            };
+            _dbContext.Collaborators.Add(collab);
+            _dbContext.SaveChanges();
+            response.StatusCode=200;
+            response.IsSuccess = true;
+            response.Message = "Note Shared Successfully";
+            response.Data = collab;
+            var connId = Connections.Where(x => x.Key == ReceiverEmail).Select(x => x.Value);
+            await Clients.Caller.SendAsync("ReceiveNote", response);
+            response.Message = "Note is Received";
+            await Clients.Clients(connId).SendAsync("ReceiveNote", response);
+            return response;
+        }
+        public async Task<Response> GetSharedNotes()
+        {
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var sharedNotes = _dbContext.Collaborators.Where(x => x.ReceiverEmail == email);
+            var NoteIds = sharedNotes.OrderByDescending(x => x.Time).Select(x => x.NoteId).ToList();
+            List<object> SharedNoteList = new List<object>();
+            if (NoteIds != null)
+            {
+                foreach (var id in NoteIds)
+                {
+                    var note = _dbContext.Notes.Where(u => u.NoteId == id && u.IsTrashed == false && u.IsArchived == false).Select(u => u).First();
+                    SharedNoteList.Add(note);
+                }
+            }
+            
+            if (NoteIds.Count == 0)
+            {
+                response.Data = null;
+                response.StatusCode = 200;
+                response.IsSuccess = true;
+                response.Message = "Shared List is Empty";
+                await Clients.Caller.SendAsync("RecieveSharedNotes", response);
+                return response;
+            }
+            response.Data = SharedNoteList;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "All Shared Notes";
+            await Clients.Caller.SendAsync("RecieveSharedNotes", response);
+            return response;
+        }
+
+        public async Task<Response> EditNote(UpdateNoteRequest update)
+        {
+            Guid NoteId = new Guid(update.NoteId);
+            var httpContext = Context.GetHttpContext();
+            var user = httpContext.User;
+            var note = _dbContext.Notes.Find(NoteId);
+            
+            if(update.Title != null)
+            {
+                note.Title = update.Title;
+            }
+            
+            if(update.MessageType != -1 )
+            {
+                if (update.MessageType == 1)
+                {
+                    if (update.Message != null)
+                    {
+                        note.Text = update.Message;
+                    }
+                    note.MessageType = 1;
+                }
+                if (update.MessageType == 2)
+                {
+                    if (update.URL != null)
+                    {
+                        note.Images = update.URL;
+                    }
+                    note.MessageType = 2;
+                }
+            }
+            note.UpdatedAt = DateTime.Now;
+            _dbContext.SaveChanges();
+
+            response.Data = note;
+            response.StatusCode = 200;
+            response.IsSuccess = true;
+            response.Message = "Note Updated";
+            await Clients.Caller.SendAsync("Others", response);
+            return response;
         }
         public async Task<Response> PinNotes(string Id , int Pin)
         {
@@ -324,6 +453,7 @@ namespace NoteApplication.Hubs
             return response;
         }
         
+
         
 
        /* public async Task CancelReminder(string alarmId)

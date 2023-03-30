@@ -27,14 +27,23 @@ namespace NoteApplication.Services
 
                     if (alarm.Key <= DateTime.Now)
                     {
+                        var reminder = new ReminderResponse()
+                        {
+                            ReminderTime = alarm.Key,
+                            NoteId = alarm.Value[2],
+                            Email = alarm.Value[1],
+                            Title = alarm.Value[3],
+                            Text = alarm.Value[4],
+                            Image = alarm.Value[5]
+                        };
                         Response res = new Response()
                         {
                             StatusCode = 200,
                             Message = " Reminder for Note",
                             IsSuccess = true,
-                            Data = alarm
+                            Data = reminder
                         };
-                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", res);
+                        await _hubContext.Clients.Clients(alarm.Value[0]).SendAsync("alarmTriggered", res);
                         var email = alarm.Value[1];
                         MailMessage message = new MailMessage();
                         message.From = new MailAddress("rakesh.kumar23@chicmic.co.in");

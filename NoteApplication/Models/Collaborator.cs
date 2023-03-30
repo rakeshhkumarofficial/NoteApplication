@@ -7,7 +7,7 @@ namespace NoteApplication.Models
         [Key]
         public Guid Id { get; set; }
         public string? SenderEmail { get; set; }
-        public string? ReciverEmail { get; set; }
+        public string? ReceiverEmail { get; set; }
         public Guid NoteId { get; set; }
         public DateTime Time { get; set; }  
     }
