@@ -24,25 +24,23 @@ namespace NoteApplication.Services
             {
                 foreach (var alarm in AlarmStorage.AlarmTimes)
                 {
-                    /*var email = alarm.Value;
-                    Console.WriteLine(email);*/
+
                     if (alarm.Key <= DateTime.Now)
                     {
-                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm);
-                       // var email = alarm.Value;
-                       // Console.WriteLine(email);
-                       /* MailMessage message = new MailMessage();
+                        
+                        await _hubContext.Clients.Clients(alarm.Value).SendAsync("alarmTriggered", alarm.Value[1]);
+                        var email = alarm.Value[1];
+                        MailMessage message = new MailMessage();
                         message.From = new MailAddress("rakesh.kumar23@chicmic.co.in");
-                        message.To.Add(new MailAddress(alarm.Value));
-                        message.Subject = "Reset your Password";
-                        message.Body = $"link on the below link to verify and then reset your passoword \n" + modifiedLink;
-
+                        message.To.Add(new MailAddress(email));
+                        message.Subject = "Reminder for Note";
+                        message.Body = $"Title: " + alarm.Value[3]+" \n" + "Text: " + alarm.Value[4] + " \n" + "Image: " + alarm.Value[5];
                         SmtpClient Newclient = new SmtpClient();
                         Newclient.Credentials = new NetworkCredential("rakesh.kumar23@chicmic.co.in", "Chicmic@2022");
                         Newclient.Host = "mail.chicmic.co.in";
                         Newclient.Port = 587;
                         Newclient.EnableSsl = true;
-                        Newclient.Send(message);*/
+                        Newclient.Send(message);
                         AlarmStorage.AlarmTimes.Remove(alarm.Key);
                     }
                 }

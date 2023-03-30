@@ -184,14 +184,14 @@ namespace NoteApplication.Hubs
                 response.StatusCode = 200;
                 response.IsSuccess = true;
                 response.Message = "No Notes Available";
-                await Clients.Caller.SendAsync("RecieveNotes", response);
+                await Clients.Caller.SendAsync("RecievePinnedNotes", response);
                 return response;
             }
             response.Data = notes;
             response.StatusCode = 200;
             response.IsSuccess = true;
-            response.Message = "All Notes";
-            await Clients.Caller.SendAsync("RecieveNotes", response);
+            response.Message = "All Pinned Notes";
+            await Clients.Caller.SendAsync("RecievePinnedNotes", response);
             return response;
         }
 
@@ -240,7 +240,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveTrashNotes", response);
             return response;
         }
-
         public async Task<Response> ArchiveNote(string Id)
         {
             Guid NoteId = new Guid(Id);
@@ -297,7 +296,6 @@ namespace NoteApplication.Hubs
             return response;
 
         }
-
         public async Task<Response> PinNotes(string Id , int Pin)
         {
             Guid NoteId = new Guid(Id);
@@ -325,7 +323,7 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedPinnedNotes", response);
             return response;
         }
-
+        
         
 
        /* public async Task CancelReminder(string alarmId)
