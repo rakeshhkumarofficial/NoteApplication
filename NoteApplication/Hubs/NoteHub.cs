@@ -40,7 +40,6 @@ namespace NoteApplication.Hubs
                 return base.OnConnectedAsync();
             }
             Connections.Add(email, Context.ConnectionId);
-            Clients.All.SendAsync("Refresh");
             return base.OnConnectedAsync();
         }
         public async Task<Response> AddNote(AddNoteRequest request)
@@ -178,7 +177,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveNotes",response);
             return response;
         }
-
         public async Task<Response> GetPinnedNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -201,7 +199,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievePinnedNotes", response);
             return response;
         }
-
         public async Task<Response> GetArchiveNote()
         {
             var httpContext = Context.GetHttpContext();
@@ -224,7 +221,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveArchiveNotes", response);
             return response;
         }
-
         public async Task<Response> GetTrashNote()
         {
             var httpContext = Context.GetHttpContext();
@@ -310,7 +306,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedTrash", response);
             return response;
         }
-
         public async Task<Response> DeleteNote(string Id)
         {
             Guid NoteId = new Guid(Id);
@@ -417,7 +412,6 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveSharedNotes", response);
             return response;
         }
-
         public async Task<Response> EditNote(UpdateNoteRequest update)
         {
             Guid NoteId = new Guid(update.NoteId);
@@ -485,16 +479,7 @@ namespace NoteApplication.Hubs
             response.Message = "You don't have the permission to Pin";
             await Clients.Caller.SendAsync("RecievedPinnedNotes", response);
             return response;
-        }
-        
-
-        
-
-       /* public async Task CancelReminder(string alarmId)
-        {
-            AlarmStorage.AlarmTimes.Remove(alarmId);
-            await Clients.Caller.SendAsync("alarmCancelled");
-        }  */ 
+        }       
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();
