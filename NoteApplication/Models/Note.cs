@@ -13,5 +13,8 @@
        public bool IsArchived { get; set; }
        public bool IsTrashed { get; set; }
        public int Pin { get; set; }
+       public bool IsShared { get; set; } 
+        public bool IsVisible { get; set; }
+       public bool IsReminder { get; set; }
     }
 }

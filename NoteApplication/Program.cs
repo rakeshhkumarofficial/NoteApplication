@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NoteApplication.Data;
@@ -65,7 +66,9 @@ builder.Services.AddScoped<IFileService, FileService>();
 
 
 builder.Services.AddSignalR();
+//builder.Services.AddScoped<IHostedService, AlarmService>();
 builder.Services.AddHostedService<AlarmService>();
+
 
 var app = builder.Build();
 
@@ -84,6 +87,7 @@ app.UseStaticFiles(new StaticFileOptions
               Path.Combine(builder.Environment.ContentRootPath, "wwwroot")),
     RequestPath = "/wwwroot"
 });
+
 
 app.UseAuthentication();
 app.UseRouting();

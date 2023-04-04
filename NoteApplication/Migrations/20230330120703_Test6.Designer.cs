@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NoteApplication.Data;
 
@@ -11,9 +12,11 @@ using NoteApplication.Data;
 namespace NoteApplication.Migrations
 {
     [DbContext(typeof(NoteAPIDbContext))]
-    partial class NoteAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230330120703_Test6")]
+    partial class Test6
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,9 +93,6 @@ namespace NoteApplication.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsTrashed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<int?>("MessageType")

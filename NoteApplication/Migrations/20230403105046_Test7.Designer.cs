@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NoteApplication.Data;
 
@@ -11,9 +12,11 @@ using NoteApplication.Data;
 namespace NoteApplication.Migrations
 {
     [DbContext(typeof(NoteAPIDbContext))]
-    partial class NoteAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230403105046_Test7")]
+    partial class Test7
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

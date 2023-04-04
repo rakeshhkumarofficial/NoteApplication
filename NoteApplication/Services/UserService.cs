@@ -67,7 +67,8 @@ namespace NoteApplication.Services
                     PasswordSalt = PasswordSalt,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
-                    Phone = user.Phone
+                    Phone = user.Phone,
+                    ProfileImage = "wwwroot\\Images\\BoyImage_20230330065257363.png"
                 };
                 _dbContext.Users.Add(obj);
                 _dbContext.SaveChanges();
@@ -261,24 +262,32 @@ namespace NoteApplication.Services
                 response.Message = "User Not Found";
                 return response;
             }
-            var fileName = Path.GetFileNameWithoutExtension(upload.File.FileName);
-            var fileExt = Path.GetExtension(upload.File.FileName);
-            var uniqueFileName = $"{fileName}_{DateTime.UtcNow.ToString("yyyyMMddHHmmssfff")}{fileExt}";
-            
-            string FilePath = "wwwroot" +"//" + "Images"+"//"+uniqueFileName;
-            string path = Path.Combine(Directory.GetCurrentDirectory(), FilePath);
-           
-            obj.ProfileImage = FilePath;
-            
-            var filestream = System.IO.File.Create(path);
+            string fileName = Path.GetFileNameWithoutExtension(upload.File.FileName);
+            string fileExt = Path.GetExtension(upload.File.FileName);
+            string uniqueFileName = $"{fileName}_{DateTime.UtcNow.ToString("yyyyMMddHHmmssfff")}{fileExt}";
+            string folderName = "wwwroot//Images//";
+            string path = Path.Combine(Directory.GetCurrentDirectory(), folderName);
+            var fullpath = path + "//" + uniqueFileName;
+            var filestream = File.Create(fullpath);
             upload.File.CopyTo(filestream);
             filestream.Close();
+            obj.ProfileImage = folderName + uniqueFileName;
             _dbContext.SaveChanges();
-            response.Data = FilePath;
+            response.Data = folderName + uniqueFileName;
             response.StatusCode = 200;
             response.IsSuccess = true;
             response.Message = "File Uploaded Successfully..";
             return response;
+        }
+
+        public Response GetUser(string email)
+        {
+            var obj = _dbContext.Users.FirstOrDefault(x => x.Email == email);
+            Response res = new Response();
+            res.StatusCode = 200;
+            res.Message = "User Details";
+            res.Data = new { obj.FirstName, obj.LastName, obj.Email, obj.Phone, obj.ProfileImage };
+            return res;
         }
     }
 }

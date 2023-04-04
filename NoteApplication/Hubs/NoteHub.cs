@@ -22,7 +22,7 @@ namespace NoteApplication.Hubs
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class NoteHub : Hub
     {
-        private readonly NoteAPIDbContext _dbContext;
+        public readonly NoteAPIDbContext _dbContext;
         Response response = new Response();
         private static Dictionary<string, string> Connections = new Dictionary<string, string>();
         public NoteHub(NoteAPIDbContext dbContext)
@@ -60,6 +60,7 @@ namespace NoteApplication.Hubs
                 MessageType = null,
                 IsArchived = false,
                 IsTrashed = false,
+                IsVisible = false,
                 Pin = 0 ,
             };
             if(request.Pin == 1)
@@ -137,6 +138,8 @@ namespace NoteApplication.Hubs
                 Email = email,
                 RemindAt = dateTime
             };
+            var updatenote = _dbContext.Notes.Find(NoteId);
+            updatenote.IsReminder = true;
             _dbContext.Reminders.Add(reminder);
             _dbContext.SaveChanges();
             response.StatusCode = 200;
@@ -158,7 +161,7 @@ namespace NoteApplication.Hubs
             var httpContext = Context.GetHttpContext();
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
-            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false && x.Pin == 0 ).ToList();
+            var notes = _dbContext.Notes.Where(x=>x.CreatorEmail == email && x.IsTrashed == false && x.IsArchived == false && x.Pin == 0).ToList();
             if (notes.Count == 0)
             {
                 response.Data = null;
@@ -256,6 +259,7 @@ namespace NoteApplication.Hubs
             {
                 note.UpdatedAt = DateTime.Now;
                 note.IsArchived = IsArchived;
+                note.IsShared = false;
                 _dbContext.SaveChanges();
                 response.Data = note;
                 response.StatusCode = 200;
@@ -283,6 +287,9 @@ namespace NoteApplication.Hubs
             {
                 note.UpdatedAt = DateTime.Now;
                 note.IsTrashed = IsTrashed;
+                note.IsArchived = false;
+                note.IsShared = false;
+                note.IsReminder = false;
                 _dbContext.SaveChanges();
                 response.Data = note;
                 response.StatusCode = 200;
@@ -291,6 +298,11 @@ namespace NoteApplication.Hubs
                 await Clients.Caller.SendAsync("RecievedTrash", response);
                 return response;
             }
+            var rem = _dbContext.Reminders.Where(x => x.NoteId == NoteId).FirstOrDefault();
+            _dbContext.Reminders.Remove(rem);
+            var share = _dbContext.Collaborators.Where(x => x.NoteId == NoteId && x.SenderEmail == email).FirstOrDefault();
+            _dbContext.Collaborators.Remove(share);
+            _dbContext.SaveChanges();
             response.Data = null;
             response.StatusCode = 200;
             response.IsSuccess = false;
@@ -342,6 +354,7 @@ namespace NoteApplication.Hubs
             var user = httpContext.User;
             var email = user.FindFirst(ClaimTypes.Name)?.Value;
             var note = _dbContext.Notes.Find(NoteId);
+            note.IsShared = true;
             var collab = new Collaborator() { 
                 Id = Guid.NewGuid(),
                 SenderEmail = email,
@@ -374,10 +387,20 @@ namespace NoteApplication.Hubs
                 foreach (var id in NoteIds)
                 {
                     var note = _dbContext.Notes.Where(u => u.NoteId == id && u.IsTrashed == false && u.IsArchived == false).Select(u => u).First();
-                    SharedNoteList.Add(note);
+                    var obj = new ShareNoteOutput()
+                    {
+                        NoteId = note.NoteId,
+                        Title = note.Title,
+                        Text = note.Text,
+                        Images = note.Images,
+                        MessageType = note.MessageType,
+                        IsVisible = note.IsVisible,
+                        CreatorEmail = note.CreatorEmail,
+                    };
+                    SharedNoteList.Add(obj);
                 }
             }
-            
+
             if (NoteIds.Count == 0)
             {
                 response.Data = null;
