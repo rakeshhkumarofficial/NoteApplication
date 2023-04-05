@@ -21,6 +21,8 @@ namespace NoteApplication.Services
             _configuration = configuration;
 
         }
+
+        // When the User Forgets his/her Password
         public Response ForgetPassword(ForgetPasswordRequest forget)
         {
             response.StatusCode = 400;
@@ -116,6 +118,8 @@ namespace NoteApplication.Services
             response.Message = "Verification Mail is Sent";
             return response;
         }
+
+        // Verfiy the mail and Reset your Password
         public Response ResetPassword(ResetPasswordRequest reset, string email)
         {
             string regexPatternPassword = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
@@ -151,6 +155,8 @@ namespace NoteApplication.Services
               _dbContext.SaveChanges();
               return response;
             }
+
+        // Create a JWT Token on forget passowrd
         private string CreateToken(User obj, IConfiguration _configuration)
             {
                 List<Claim> claims = new List<Claim>
@@ -168,6 +174,8 @@ namespace NoteApplication.Services
                 var jwt = new JwtSecurityTokenHandler().WriteToken(token);
                 return jwt;
             }
+
+        // Create a PasswordHash and PasswordSalt for the reset password
         private void CreatePasswordHash(string Password, out byte[] PasswordHash, out byte[] PasswordSalt)
             {
                 using (var hmac = new HMACSHA512())

@@ -18,6 +18,8 @@ namespace NoteApplication.Services
             _dbContext = dbContext;
             _configuration = configuration;
         }
+
+        // Register a New User
         public Response Register(RegisterRequest user)
         {
             response.Data = null;
@@ -90,6 +92,8 @@ namespace NoteApplication.Services
             }
             return response;
         }
+
+        // Create a JWT Token whenever user register or login
         private string CreateToken(User obj, IConfiguration _configuration)
         {
             List<Claim> claims = new List<Claim>
@@ -108,6 +112,8 @@ namespace NoteApplication.Services
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             return jwt;
         }
+
+        // Create a PasswordHash and PasswordSalt for the Password
         private void CreatePasswordHash(string Password, out byte[] PasswordHash, out byte[] PasswordSalt)
         {
             using (var hmac = new HMACSHA512())
@@ -116,6 +122,8 @@ namespace NoteApplication.Services
                 PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(Password));
             }
         }
+
+        // Login a User
         public Response Login(LoginRequest login)
         {
             response.Data = null;
@@ -160,6 +168,8 @@ namespace NoteApplication.Services
             response.Message = "Login Successfull";
             return response;
         }
+
+        // Verify the LoggedIn User Password 
         private bool VerifyPasswordHash(string Password, byte[] PasswordHash, byte[] PasswordSalt)
         {
             using (var hmac = new HMACSHA512(PasswordSalt))
@@ -168,6 +178,8 @@ namespace NoteApplication.Services
                 return computedHash.SequenceEqual(PasswordHash);
             }
         }
+
+        // Change the old Password
         public Response ChangePassword(ChangePasswordRequest changePasswordRequest, string email)
         {
             response.Data = null;
@@ -207,6 +219,8 @@ namespace NoteApplication.Services
             response.Message = "Password Changed Successfully";
             return response;
         }
+
+        // Update a User Profile
         public Response UpdateProfile(UpdateProfileRequest update, string email)
         {
             response.StatusCode = 400;
@@ -250,6 +264,8 @@ namespace NoteApplication.Services
             response.Message = "User details updated";
             return response;
         }
+
+        // Upload Profie Image
         public Response FileUpload(FileUploadRequest upload, string email)
         {
             var obj = _dbContext.Users.FirstOrDefault(x => x.Email == email);
@@ -280,6 +296,7 @@ namespace NoteApplication.Services
             return response;
         }
 
+        // Get details of LoggedIn User
         public Response GetUser(string email)
         {
             var obj = _dbContext.Users.FirstOrDefault(x => x.Email == email);

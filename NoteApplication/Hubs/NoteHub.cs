@@ -29,6 +29,8 @@ namespace NoteApplication.Hubs
         {
             _dbContext = dbContext;         
         }
+        
+        // When the NoteHub get connected 
         public override Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
@@ -42,6 +44,8 @@ namespace NoteApplication.Hubs
             Connections.Add(email, Context.ConnectionId);
             return base.OnConnectedAsync();
         }
+
+        // Add a new Note 
         public async Task<Response> AddNote(AddNoteRequest request)
         {
             var httpContext = Context.GetHttpContext();
@@ -87,6 +91,8 @@ namespace NoteApplication.Hubs
             
             return response;
         }
+
+        // Add a Reminder for a particular note
         public async Task<Response> AddReminder(string Id, DateTime Time)
         {
 
@@ -155,6 +161,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("NoteReminder", response);         
             return response;
         }       
+
+        // Get All the Notes
         public async Task<Response> GetNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -177,6 +185,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveNotes",response);
             return response;
         }
+
+        // Get All Pinned Notes  
         public async Task<Response> GetPinnedNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -199,6 +209,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievePinnedNotes", response);
             return response;
         }
+
+        // Get All Archived Notes  
         public async Task<Response> GetArchiveNote()
         {
             var httpContext = Context.GetHttpContext();
@@ -221,6 +233,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveArchiveNotes", response);
             return response;
         }
+
+        // Get All Trashed Notes 
         public async Task<Response> GetTrashNote()
         {
             var httpContext = Context.GetHttpContext();
@@ -243,6 +257,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveTrashNotes", response);
             return response;
         }
+
+        // Add a Particular Note to Archive 
         public async Task<Response> ArchiveNote(string Id , bool IsArchived)
         {
             Guid NoteId = new Guid(Id);
@@ -271,6 +287,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedArchive", response);
             return response;
         }
+
+        // Add a Particular Note to Trash
         public async Task<Response> TrashNote(string Id , bool IsTrashed)
         {
             Guid NoteId = new Guid(Id);
@@ -306,6 +324,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedTrash", response);
             return response;
         }
+
+        // Delete a Particular Note
         public async Task<Response> DeleteNote(string Id)
         {
             Guid NoteId = new Guid(Id);
@@ -332,6 +352,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedTrash", response);
             return response;
         }
+
+        // Share or Collab a Note to Collaborator
         public async Task<Response> ShareNote(string Id , string ReceiverEmail)
         {
             string regexPatternEmail = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$";
@@ -369,6 +391,8 @@ namespace NoteApplication.Hubs
             await Clients.Clients(connId).SendAsync("ReceiveNote", response);
             return response;
         }
+
+        // Get All the Shared Notes
         public async Task<Response> GetSharedNotes()
         {
             var httpContext = Context.GetHttpContext();
@@ -412,6 +436,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecieveSharedNotes", response);
             return response;
         }
+
+        // Edit a Particular Note
         public async Task<Response> EditNote(UpdateNoteRequest update)
         {
             Guid NoteId = new Guid(update.NoteId);
@@ -453,6 +479,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("Others", response);
             return response;
         }
+
+        // Pin a Particular Note
         public async Task<Response> PinNotes(string Id , int Pin)
         {
             Guid NoteId = new Guid(Id);
@@ -480,6 +508,8 @@ namespace NoteApplication.Hubs
             await Clients.Caller.SendAsync("RecievedPinnedNotes", response);
             return response;
         }       
+
+        // When the NoteHub get disconnected
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var httpContext = Context.GetHttpContext();
